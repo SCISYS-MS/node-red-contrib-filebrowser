@@ -1,0 +1,458 @@
+<script type="text/x-red" data-template-name="filebrowser in">
+
+    <div class="form-row">
+    <label for="node-input-filebrowser"><i class="fa fa-folder"></i> Repositories</label>
+    <input type="text" id="node-input-filebrowser">
+  </div>
+  
+    <div class="form-row" style="margin-bottom:0;">
+        <label><i class="fa fa-list"></i> <span data-i18n="change.label.rules"></span></label>
+    </div>
+  <div class="form-row node-input-rule-container-row">
+        <ol id="node-input-rule-container"></ol>
+   </div>
+	
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('filebrowser in', {
+    category: 'storage-input',
+    color: "BurlyWood",
+    defaults: {
+        filebrowser: {
+            type: 'filebrowser',
+            required: true
+        },
+        repositoryType: {
+            value: ''
+        },
+        rules: {
+            value: [{
+                t: "set"
+            }]
+        },
+        property: {
+            value: "payload",
+            required: true,
+            validate: RED.validators.typedInput("propertyType")
+        },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "file.png",
+    label: function() {
+        return this.username || 'Repository';
+    },
+    labelStyle: function() {
+        return this.name ? 'node_label_italic' : '';
+    },
+    oneditprepare: function() {
+		console.log("Form loaded");
+        var node = this;
+		console.log(this);
+        var previousValueType = {
+            value: "prev",
+            label: this._("inject.previous"),
+            hasValue: false
+        };
+
+        //   $("#node-input-property").typedInput({default:this.name||'msg',type:['filebrowser']});
+        $("#node-input-property").typedInput({
+            default: this.propertyType || 'msg',
+            types: ['msg', 'flow', 'global', 'jsonata']
+        });
+
+
+
+        function resizeRule(rule) {
+            var newWidth = rule.width();
+            var selectField = rule.find("select");
+            var type = selectField.val() || "";
+            var selectWidth = 300;
+            selectField.width(selectWidth);
+
+        }
+
+        $("#node-input-rule-container").css('min-height', '250px').css('min-width', '450px').editableList({
+            addItem: function(container, i, opt) {
+                var rule = opt.r;
+
+
+                container.css({
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap'
+                });
+                var row = $('<div/>').appendTo(container);
+
+                var selectField = $('<select/>', {
+                    style: "width:400px; margin-left: 5px; text-align: center;"
+                }).appendTo(row);
+
+
+                $("#node-input-filebrowser option").each(function() {
+                    if ($(this).text().startsWith("Add new") == false) {
+                        selectField.append($("<option></option>").val($(this).val()).text($(this).text()));
+
+                    }
+                });
+
+
+
+
+                selectField.change(function() {
+                    resizeRule(container);
+                    var type = selectField.val();
+
+
+                });
+				
+                console.log(rule.t);
+                selectField.val(rule.t);
+
+                selectField.change();
+
+                // -> 1,2, index Field
+                var finalspan = $('<span/>', {
+                    style: "float: right;margin-top: 6px;"
+                }).appendTo(row);
+                finalspan.append(' &#8594; <span class="node-input-rule-index">' + (i + 1) + '</span> ');
+
+
+
+            },
+            removeItem: function(opt) {
+
+
+                var rules = $("#node-input-rule-container").editableList('items');
+                rules.each(function(i) {
+                    $(this).find(".node-input-rule-index").html(i + 1);
+                    var data = $(this).data('data');
+
+                });
+
+            },
+            resizeItem: resizeRule,
+            sortItems: function(rules) {
+
+                var rules = $("#node-input-rule-container").editableList('items');
+                rules.each(function(i) {
+                    $(this).find(".node-input-rule-index").html(i + 1);
+                    var data = $(this).data('data');
+
+                });
+
+            },
+            sortable: true,
+            removable: true
+        });
+
+        for (var i = 0; i < this.rules.length; i++) {
+            var rule = this.rules[i];
+            console.log(rule);
+            $("#node-input-rule-container").editableList('addItem', {
+                r: rule,
+                i: i
+            });
+        }
+    },
+    oneditsave: function() {
+        var rules = $("#node-input-rule-container").editableList('items');
+        var ruleset;
+        var node = this;
+        node.rules = [];
+        rules.each(function(i) {
+
+            var ruleData = $(this).data('data');
+            var rule = $(this);
+            var type = rule.find("select").val();
+            var r = {
+                t: type
+            };
+
+            node.rules.push(r);
+        });
+        console.log(node.rules);
+        this.propertyType = $("#node-input-property").typedInput('type');
+    },
+    oneditresize: function(size) {
+        var rows = $("#dialog-form>div:not(.node-input-rule-container-row)");
+        var height = size.height;
+        for (var i = 0; i < rows.size(); i++) {
+            height -= $(rows[i]).outerHeight(true);
+        }
+        var editorRow = $("#dialog-form>div.node-input-rule-container-row");
+        height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+        $("#node-input-rule-container").editableList('height', height);
+    },
+
+    });
+
+</script>
+
+
+
+
+
+<script type="text/x-red" data-template-name="filebrowser">
+
+
+
+    <div class="form-row">
+    <label for="node-config-input-repositoryType"><i class="fa fa-repType"></i> Type</label>
+    <select type="text" id="node-config-input-repositoryType"  >
+      <option value="SMB">SMB</option>
+      <option value="FTP">FTP</option>
+    </select>
+  </div>
+  
+  
+
+  <div class="form-row">
+    <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-config-input-name" placeholder="Name">
+  </div>
+  
+  <div class="form-row input-ftpProtocol-row">
+    <label for="node-config-input-ftpProtocol"><i class="fa fa-ftpProt"></i> FTP Protocol</label>
+    <select type="text" id="node-config-input-ftpProtocol"  >
+      <option value="ftp">ftp</option>
+	  <option value="ftps">ftps</option>
+      <option value="sftp">sftp</option>
+    </select>
+  </div>
+  
+  
+  <div class="form-row">
+    <label for="node-config-input-share"><i class="fa fa-bookmark"></i> Share/Host</label>
+    <input type="text" id="node-config-input-share" placeholder="" style="width: 40%;" />
+	
+    <label for="node-config-input-port" style="margin-left: 10px; width: 35px; "> Port</label>
+    <input type="text" id="node-config-input-port" placeholder="445" style="width:45px"/>
+  </div>
+  
+    <div class="form-row">
+    <label for="node-config-input-workdir"><i class="fa fa-folder-open"></i> Working Directory</label>
+    <input type="text" id="node-config-input-workdir" placeholder="Working Directory">
+  </div>
+  
+   <div class="form-row">
+    <label for="node-config-input-username"><i class="fa fa-user"></i> User</label>
+    <input type="text" id="node-config-input-username" placeholder="anonymous">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
+    <input type="password" id="node-config-input-password">
+  </div>
+  
+  
+  
+  <div class="form-row input-smb_props-row">
+	  <div class="form-row">
+		<label for="node-config-input-domain"><i class="fa fa-bookmark"></i> Domain</label>
+		<input type="text" id="node-config-input-domain">
+	  </div>
+ </div>
+
+ 
+ 
+  <div class="form-row input-ftp_props-row">
+  <div class="form-row">
+    <label for="node-config-input-ftp_connTimeout"><i class="fa fa-clock-o"></i> Connection Timeout</label>
+    <input type="text" id="node-config-input-ftp_connTimeout" placeholder="10000">
+    </div>
+
+  <div class="form-row">
+    <label for="node-config-input-ftp_keepalive"><i class="fa fa-clock-o"></i> Keepalive</label>
+    <input type="text" id="node-config-input-ftp_keepalive" placeholder="10000">
+   </div>
+  <div class="form-row">
+    <label for="node-input-requireSSHKey"><i class="fa fa-key"></i> Require SSH Key</label>
+    <input type="checkbox" id="node-input-requireSSHKey" placeholder="once" style="width: 10%; vertical-align: top;">
+    <label for="node-config-input-sshKeyPath" style="width: 20%; vertical-align: top;"> SSH Key Path</label>
+    <input type="text" id="node-config-input-sshKeyPath" style="width: 35%; vertical-align: top;">
+   </div>
+  
+   <div class="form-row">
+    <label for="node-config-input-additionalLftpCommands"><i class="fa fa-clock-o"></i> Additional FTP Commands</label>
+    <input type="text" id="node-config-input-additionalLftpCommands" placeholder="10000">
+    </div>
+  
+  
+  	
+							
+	<!--toDo>					
+  escape: true, // optional, used for escaping shell characters (space, $, etc.), default: true
+  retries: 2, // Optional, defaults to 1 (1 = no retries, 0 = unlimited retries)
+  timeout: 10, // Optional, Time before failing a connection attempt. Defaults to 10
+  retryInterval: 5, // Optional, Time in seconds between attempts. Defaults to 5
+  retryMultiplier: 1, // Optional, Multiplier by which retryInterval is multiplied each time new attempt fails. Defaults to 1
+  requiresPassword: true, // Optional, defaults to true
+  autoConfirm: true, // Optional, is used to auto confirm ssl questions on sftp or fish protocols, defaults to false
+  cwd: '', // Optional, defaults to the directory from where the script is executed
+  additionalLftpCommands: '', // Additional commands to pass to lftp, splitted by ';'
+  requireSSHKey:  true, //  Optional, defaults to false, This option for SFTP Protocol with ssh key authentication
+  sshKeyPath: '/home1/phrasee/id_dsa' // Required if requireSSHKey: true , defaults to empty string, This option for SFTP Protocol with ssh key authentication
+			</toDo-->							
+
+  
+  </div> 
+  
+  
+  
+     <script>
+	
+			
+  
+        $("#node-config-input-repositoryType").change(function() {
+            var protocol = $("#node-config-input-repositoryType").val();
+            if (protocol === "SMB") {
+                $(".input-smb_props-row").show();
+                $(".input-ftp_props-row").hide();
+				$(".input-ftpProtocol-row").hide();
+				$("#node-config-input-port").val("445");
+            } else {
+                $(".input-smb_props-row").hide();
+                $(".input-ftp_props-row").show();
+				$(".input-ftpProtocol-row").show();
+				$("#node-config-input-port").val("21");
+            }
+          
+        });
+		
+		 $("#node-config-input-ftpProtocol").change(function() {
+		 var ftpProtocol = $("#node-config-input-ftpProtocol").val();
+		 switch (ftpProtocol) {
+		 case "ftp":
+		 $("#node-config-input-port").val("21");
+		 $("#node-input-ftp_secure").prop('checked', false);
+		 break;
+		 case "ftps":
+		 $("#node-config-input-port").val("990");
+		 $("#node-input-ftp_secure").prop('checked', false);
+		 break;
+		 case "sftp":
+		 $("#node-config-input-port").val("22");
+		 $("#node-input-ftp_secure").prop('checked', true);
+		 break;
+		 }
+		  });
+		 
+    </script>
+
+
+</script>
+
+
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('filebrowser', {
+        category: 'config',
+        color: "BurlyWood",
+        defaults: {
+            repositoryType: {
+                value: ''
+            },
+            share: {
+                value: ''
+            },
+            port: {
+                value: ''
+            },
+            domain: {
+                value: ''
+            },
+            username: {
+                value: ''
+            },
+            password: {
+                value: ''
+            },
+            workdir: {
+                value: ''
+            },
+            name: {
+                value: ''
+            },
+            connTimeout: {
+                value: ''
+            },
+			ftpProtocol: {
+                value: ''
+            },
+			requireSSHKey: {
+                value: ''
+            },
+            sshKeyPath: {
+                value: ''
+            },
+			additionalLftpCommands: {
+                value: ''
+            },
+        },
+        label: function() {
+            return this.name
+        },
+        oneditprepare: function() {
+		
+            var protocol = $("#node-input-repositoryType").val();
+            if (protocol === "SMB") {
+                $(".input-smb_props-row").show();
+                $(".input-ftp_props-row").hide();
+            } else {
+                $(".input-smb_props-row").hide();
+                $(".input-ftp_props-row").show();
+            }
+        },
+	oneditsave: function() {
+	console.log("Repositories updated"); 
+	
+		  }
+
+    });
+</script>
+
+
+
+
+
+<script type="text/x-red" data-help-name="filebrowser">
+    <p>A JavaScript function block to run against the messages being received by the node.</p>
+    <p>The messages are passed in as a JavaScript object called <code>msg</code>.</p>
+    <p>By convention it will have a <code>msg.payload</code> property containing
+       the body of the message.</p>
+    <p>The function is expected to return a message object (or multiple message objects), but can choose
+       to return nothing in order to halt a flow.</p>
+    <h3>Details</h3>
+    <p>See the <a target="_blank" href="http://nodered.org/docs/writing-functions.html">online documentation</a>
+    for more information on writing functions.</p>
+    <h4>Sending messages</h4>
+    <p>The function can either return the messages it wants to pass on to the next nodes
+    in the flow, or can call <code>node.send(messages)</code>.</p>
+    <p>It can return/send:</p>
+    <ul>
+      <li>a single message object - passed to nodes connected to the first output</li>
+      <li>an array of message objects - passed to nodes connected to the corresponding outputs</li>
+    </ul>
+    <p>If any element of the array is itself an array of messages, multiple
+          messages are sent to the corresponding output.</p>
+    <p>If null is returned, either by itself or as an element of the array, no
+          message is passed on.</p>
+    <h4>Logging and Error Handling</h4>
+    <p>To log any information, or report an error, the following functions are available:</p>
+      <ul>
+          <li><code>node.log("Log message")</code></li>
+          <li><code>node.warn("Warning")</code></li>
+          <li><code>node.error("Error")</code></li>
+      </ul>
+    </p>
+    <p>The Catch node can also be used to handle errors. To invoke a Catch node,
+    pass <code>msg</code> as a second argument to <code>node.error</code>:</p>
+    <pre>node.error("Error",msg);</pre>
+    <h4>Referring Node Information</h4>
+    <p>In the function block, id and name of the node can be referenced using the following properties:</p>
+    <ul>
+        <li><code>node.id</code> - id of the node</li>
+        <li><code>node.name</code> - name of the node</li>
+    </ul>
+</script>

@@ -1,2 +1,2 @@
-# node-red-contrib-filebrowser
-A node-red node to access SMB/CIFS Shares and FTP Repositories 
+# Repository-SMB
+A widget to access Shares and Repositories via external Tools

@@ -1,0 +1,70 @@
+{
+  "_args": [
+    [
+      "node-red-contrib-repository-filebrowser@0.0.7",
+      "C:\\node-red\\common\\data"
+    ]
+  ],
+  "_from": "node-red-contrib-repository-filebrowser@0.0.7",
+  "_id": "node-red-contrib-repository-filebrowser@0.0.7",
+  "_inBundle": false,
+  "_integrity": "sha512-fGpibQe6ry8nJNgGIcIYDZOuFfArk9thy9OXR6fBjVKp7VA2k9nYFyI3qlxIkegltvsMIoC62MxdtT7FSNt8tQ==",
+  "_location": "/node-red-contrib-repository-filebrowser",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "node-red-contrib-repository-filebrowser@0.0.7",
+    "name": "node-red-contrib-repository-filebrowser",
+    "escapedName": "node-red-contrib-repository-filebrowser",
+    "rawSpec": "0.0.7",
+    "saveSpec": null,
+    "fetchSpec": "0.0.7"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/node-red-contrib-repository-filebrowser/-/node-red-contrib-repository-filebrowser-0.0.7.tgz",
+  "_spec": "0.0.7",
+  "_where": "C:\\node-red\\common\\data",
+  "author": {
+    "name": "mdalkaya"
+  },
+  "bugs": {
+    "url": "https://github.com/SCISYS-MS/node-contrib-repository-filebrowser/issues"
+  },
+  "dependencies": {
+    "base64url": "3.0.0",
+    "child_process": "1.0.2",
+    "ftps": "1.1.1",
+    "iconv-lite": "0.4.24",
+    "int64-buffer": "^0.99.1007",
+    "json-easy-filter": "0.3.1",
+    "mime-types": "2.1.20",
+    "node-fetch": "2.3.0",
+    "parse-listing": "git+https://github.com/SCISYS-MS/parse-listing.git",
+    "path": "0.12.7"
+  },
+  "deprecated": false,
+  "description": "node-red module to access network shares",
+  "homepage": "https://github.com/SCISYS-MS/node-contrib-repository-filebrowser#readme",
+  "keywords": [
+    "SMB"
+  ],
+  "license": "MIT",
+  "main": "filebrowser.js",
+  "name": "node-red-contrib-repository-filebrowser",
+  "node-red": {
+    "nodes": {
+      "node-red-filebrowser": "filebrowser.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SCISYS-MS/node-contrib-repository-filebrowser.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "0.0.7"
+}
