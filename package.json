@@ -1,8 +1,5 @@
 {
-  
-    "author": {
-    "name": "mdalkaya"
-  },
+  "author": "mdalkaya",
   "bugs": {
     "url": "https://github.com/SCISYS-MS/node-contrib-filebrowser/issues"
   },
@@ -39,5 +36,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.2"
+  "version": "0.0.11",
+  "devDependencies": {}
 }
