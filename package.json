@@ -1,5 +1,5 @@
 {
-  "author": "mdalkaya",
+  "author": "mdalkaya@annova.tv",
   "bugs": {
     "url": "https://github.com/SCISYS-MS/node-contrib-filebrowser/issues"
   },
@@ -20,7 +20,8 @@
   "description": "node-red module to access network shares",
   "homepage": "https://github.com/SCISYS-MS/node-red-contrib-filebrowser#readme", 
   "keywords": [
-    "SMB",
+    "smb",
+    "cifs",
     "node-red",
     "ftps",
     "sftp",
@@ -42,6 +43,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.16",
+  "version": "0.0.17",
   "devDependencies": {}
 }
