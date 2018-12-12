@@ -92,23 +92,33 @@ To create a new FTP repository set the Repsoitory Type to "FTP":
 - Working Directory: Set entry path/working directory if needed
 - Additional FTP Commands: Additional commands to pass to lftp, splitted by ';' 
 
-### Accessing the Tool 
-
-According to the configuration above the filebrowser/repository widget can be accessed via 
-
-http://[[NODE-RED-URL]]/repository/search/[[repositoryIndex]]?query=
-
-
-e.g. http://127.0.0.1:1880/repository/search/2?query=
-
-
-
-
-
 ## Caching #
 In order to improve performance and to limit your API key usage, the cache node allows you to configure the duration during which a request and its answer remain in the cache. The default is 60 seconds.
 ![screenshot_11](https://user-images.githubusercontent.com/30046324/48259178-78fc9500-e417-11e8-90f9-d37c4232442d.png)
 
 ## Security #
 If your flow is available on the public internet, don't forget to [secure your Node-Red instance](https://nodered.org/docs/security) ! 
+
+
+
+# Accessing the Tool 
+
+According to the configuration above the filebrowser/repository the repository can be accessed via the following URL:
+
+```
+http://[[NODE-RED-URL]]/repository/search/[[repositoryIndex]]?query=
+e.g. http://127.0.0.1:1880/repository/search/2?query=
+```
+
+This will output the files (located on the repository) in JSON Format.
+
+In order to display files and folder in a search widget view (see screenshot at top) a Generic Widget can be applied. The generic widget takes the JSON from the filebrowser response as source and allows navigating through folders and query files (search). 
+
+See (https://github.com/SCISYS-MS/GenericWidget) for more details. 
+
+E.g. the URL would be then: 
+
+```
+https://127.0.0.1:1880/genericWidget?searchURL=./repository/search/2&filterFormURL=./repositories/filters&sortFormURL=./repositories/sort&refreshInterval=60
+```
 
