@@ -22,10 +22,7 @@ module.exports = function(RED) {
 
         RED.nodes.createNode(this, n);
         this.rules = RED.nodes.getNode(n.rules);
-        // console.log("----------------------------------------------------");
-        //console.log(JSON.stringify(this));
         var node = this;
-        //	console.log("NODE " +n.share);
         this.options = {
             repositoryType: n.repositoryType || "smb",
             share: n.share || 'localhost',
@@ -52,7 +49,7 @@ module.exports = function(RED) {
         node.on('input', function(msg) {
 
             let repIx = Number(msg.repIx) - 1;
-            this.filebrowser = n.rules[repIx].t; //n.filebrowser;
+            this.filebrowser = n.rules[repIx].t; 
             this.nodeConfig = RED.nodes.getNode(this.filebrowser);
 
 
