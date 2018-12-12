@@ -17,13 +17,14 @@
   },
   "deprecated": false,
   "description": "node-red module to access network shares",
-  "homepage": "https://github.com/SCISYS-MS/node-contrib-filebrowser#readme",
+  "homepage": "https://github.com/SCISYS-MS/node-red-contrib-filebrowser#readme", 
   "keywords": [
     "SMB",
     "node-red",
     "ftps",
     "sftp",
-    "ftp"
+    "ftp",
+    "lftp"
   ],
   "license": "MIT",
   "main": "filebrowser.js",
@@ -40,6 +41,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.12",
+  "version": "0.0.14",
   "devDependencies": {}
 }
