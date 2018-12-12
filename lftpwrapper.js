@@ -136,8 +136,9 @@ FTP.prototype.exec = function (cmds, callback) {
       cwd: this.options.cwd
     }
   }
+ 
 console.log("LFTP Command: lftp -c " + "'" + cmd + "'")
-  var lftp = spawn('lftp', ['-c',  cmd ], spawnoptions)
+  var lftp = spawn(__dirname + '/lftp/lftp.exe', ['-c',  cmd ], spawnoptions)
   var data = ''
   var error = ''
 
@@ -188,7 +189,7 @@ FTP.prototype.execAsStream = function (cmds) {
     }
   }
 
-  return dcp.spawn('lftp', ['-c', "'" + cmd + "'"], spawnoptions)
+  return dcp.spawn(__dirname + '/lftp/lftp.exe', ['-c', "'" + cmd + "'"], spawnoptions)
 }
 
 FTP.prototype.raw = function (cmd) {

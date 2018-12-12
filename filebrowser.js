@@ -18,7 +18,6 @@ module.exports = function(RED) {
 
 
 
-
     function fBConfigNode(n) {
 
         RED.nodes.createNode(this, n);
@@ -36,8 +35,8 @@ module.exports = function(RED) {
             password: n.password,
             ftpProtocol: n.ftpProtocol,
             requireSSHKey: n.requireSSHKey,
-            sshKeyPath: n.sshKeyPath
-
+            sshKeyPath: n.sshKeyPath,
+            addFulltextUrlPrefix: n.addFulltextUrlPrefix
 
         }
     };
@@ -66,7 +65,7 @@ module.exports = function(RED) {
 
             let operation = msg.operation;
             let useFulltext = msg.useFulltext;
-            let fulltextEngineURL = msg.fulltextEngineURL 
+            let fulltextEngineURL = msg.fulltextEngineURL
             let sharePath = this.nodeConfig.options.share;
             let username = this.nodeConfig.options.username;
             let password = this.nodeConfig.options.password;
@@ -74,6 +73,7 @@ module.exports = function(RED) {
             let repositoryType = this.nodeConfig.options.repositoryType;
             let ftpProtocol = this.nodeConfig.options.ftpProtocol;
             let port = this.nodeConfig.options.port;
+            let addFulltextUrlPrefix = this.nodeConfig.options.addFulltextUrlPrefix;
 
 
             console.log("Rules : " + n.rules);
@@ -136,7 +136,7 @@ module.exports = function(RED) {
                             ftps.cd("'" + remotePath + "'");
 
 
-							console.log("Query ::" + query)
+                            console.log("Query ::" + query)
                             if (query == "") {
 
                                 lftp_command = "ls -lR";
@@ -149,11 +149,11 @@ module.exports = function(RED) {
                                 // err will be null (to respect async convention) 
                                 // res is an hash with { error: stderr || null, data: stdout } 
                                 //   console.log("FTP Parameters : " + ftps);
-                       //         console.log("ParentPath: " + parentPath);
-                        console.log(result.data);
+                                console.log("ParentPath: " + parentPath);
+                                //      console.log(result.data);
 
 
-				
+
 
                                 var standardJSON = {
                                     parent: encode(parentPath),
@@ -219,17 +219,17 @@ module.exports = function(RED) {
                                     currentDir: currentDir,
                                     items: []
                                 };
-								
+
                                 standardJSON.items.forEach(function(element, index) {
-                                         console.log("Index" + index)
+                                    console.log("Index" + index)
                                     if (element['filename'].search(query) >= 0) {
                                         filteredJSON.items.push(element);
-                                              console.log('found', element) 
+                                        console.log('found', element)
 
                                     }
                                 })
-                                console.log(filteredJSON);
-                                	
+                                //   console.log(filteredJSON);
+
                                 msg.payload = filteredJSON;
                                 node.send(msg);
 
@@ -316,11 +316,12 @@ module.exports = function(RED) {
                                             }
 
                                             let openurl;
-                                            if (repositoryType == "FTP") {
-                                                //	openurl = "ftp://" + FTPHost + ":" + FTPPort + "\/" + FTPworkdir + remotePath + "\/" + resultItem.name	
-                                            } else if (repositoryType == "SMB") {
+                                            if (addFulltextUrlPrefix) {
+                                                openurl = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
+                                            } else {
                                                 openurl = sharePath + "\\" + remotePath + "\\" + entry.name
                                             }
+
 
 
                                             //       let parentDir = userPath.substr(0, userPath.lastIndexOf("\\")); // + "\\" + entry.name;
@@ -331,7 +332,7 @@ module.exports = function(RED) {
                                                 size: entry.size,
                                                 filename: entry.name,
                                                 lastmod: entry.time,
-                                                url: fulltextEngineURL + "\/" + openurl,
+                                                url: openurl,
                                                 mime: mime.lookup(entry.name)
                                                 //			raw: entry
 
@@ -415,6 +416,12 @@ module.exports = function(RED) {
 
                                                 var id = '';
                                                 id = encode(responseData.results[i].path + "\\" + responseData.results[i].name);
+                                                let openurl;
+                                                if (addFulltextUrlPrefix) {
+                                                    openurl = fulltextEngineURL + "\/" + responseData.results[i].path + "\\" + responseData.results[i].name
+                                                } else {
+                                                    openurl = responseData.results[i].path + "\\" + responseData.results[i].name
+                                                }
 
 
 
@@ -425,7 +432,7 @@ module.exports = function(RED) {
                                                     size: responseData.results[i].size,
                                                     filename: responseData.results[i].name,
                                                     lastmod: "", //lastmodDT, //since return is tick,
-                                                    url: encodeURI(fulltextEngineURL + "\/" + responseData.results[i].path + "\\" + responseData.results[i].name),
+                                                    url: openurl,
                                                     mime: mime.lookup(responseData.results[i].name)
                                                     //			raw: entry
 
@@ -494,11 +501,12 @@ module.exports = function(RED) {
 
 
                                             let openurl;
-                                            if (repositoryType == "ftp") {
-                                                //	openurl = "ftp://" + FTPHost + ":" + FTPPort + "\/" + FTPworkdir + remotePath + "\/" + resultItem.name	
-                                            } else if (repositoryType == "smb") {
+                                            if (addFulltextUrlPrefix) {
+                                                openurl = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
+                                            } else {
                                                 openurl = sharePath + "\\" + remotePath + "\\" + entry.name
                                             }
+
 
 
                                             //       let parentDir = userPath.substr(0, userPath.lastIndexOf("\\")); // + "\\" + entry.name;
@@ -524,37 +532,7 @@ module.exports = function(RED) {
                                     msg.payload = standardJSON;
                                     node.send(msg);
                                 })
-                                //	where.on('error', function(err) { reject(err) })
 
-
-
-                                //	respStr = respStr.replace("\r\n", "XXXX")
-
-
-                                /*	respStr = respStr + data;
-                                	
-                                	if (respStr.indexOf("\r\n")>0) {
-                                		
-                                		
-                                	let fileArr = respStr.split("\r\n");
-                                	
-                                	console.log(fileArr[0]);
-                                	console.log("-----------------------");
-                                	respStr = "";//respStr.replace(fileArr[0],"");
-                                	
-                                //		var entry = Parser.parseEntry(data.trim(),"WHERE");
-                                	
-                                	}
-                                	console.log("respStr: " + respStr);*/
-
-
-
-
-                                //	msg.payload = standardJSON;
-                                //	node.send(msg);
-
-
-                                //			});
                             }
 
                         }

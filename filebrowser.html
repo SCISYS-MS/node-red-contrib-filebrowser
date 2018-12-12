@@ -244,7 +244,7 @@
     <input type="password" id="node-config-input-password">
   </div>
   
-  
+
   
   <div class="form-row input-smb_props-row">
 	  <div class="form-row">
@@ -252,6 +252,12 @@
 		<input type="text" id="node-config-input-domain">
 	  </div>
  </div>
+ 
+   <div class="form-row">
+    <label for="node-config-input-addFulltextUrlPrefix"><i class="fa fa-plus"></i> Add Fulltext-URL to Shareable-Link </label>
+    <input type="checkbox" id="node-config-input-addFulltextUrlPrefix" placeholder="once" style="width: 10%; vertical-align: top;">
+  </div> 
+  
 
  
  
@@ -273,11 +279,11 @@
    </div>
   
    <div class="form-row">
-    <label for="node-config-input-additionalLftpCommands"><i class="fa fa-clock-o"></i> Additional FTP Commands</label>
-    <input type="text" id="node-config-input-additionalLftpCommands" placeholder="10000">
+    <label for="node-config-input-additionalLftpCommands"><i class="fa fa-plus-square"></i> Additional FTP Commands</label>
+    <input type="text" id="node-config-input-additionalLftpCommands" placeholder="">
     </div>
   
-  
+
   	
 							
 	<!--toDo>					
@@ -387,6 +393,9 @@
                 value: ''
             },
 			additionalLftpCommands: {
+                value: ''
+            },
+			addFulltextUrlPrefix: {
                 value: ''
             },
         },
