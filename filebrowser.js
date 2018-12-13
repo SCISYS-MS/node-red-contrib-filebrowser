@@ -41,36 +41,43 @@ module.exports = function(RED) {
 
 
     function fileBrowserClient(n) {
-
+	console.log("node-red-contrib-filebrowser initialized.");
+	
         RED.nodes.createNode(this, n);
         var node = this;
+		
+		this.workdir = n.workdir || '';
+		var workdir = this.workdir;
+		this.filebrowser = n.rules[repIx].t; 
+		this.nodeConfig = RED.nodes.getNode(this.filebrowser);
+		let sharePath = this.nodeConfig.options.share;
+		let username = this.nodeConfig.options.username;
+		let password = this.nodeConfig.options.password;
+		let domain = this.nodeConfig.options.domain;
+		let repositoryType = this.nodeConfig.options.repositoryType;
+		let ftpProtocol = this.nodeConfig.options.ftpProtocol;
+		let port = this.nodeConfig.options.port;
+		let addFulltextUrlPrefix = this.nodeConfig.options.addFulltextUrlPrefix;
 
 
         node.on('input', function(msg) {
+		
 
             let repIx = Number(msg.repIx) - 1;
-            this.filebrowser = n.rules[repIx].t; 
-            this.nodeConfig = RED.nodes.getNode(this.filebrowser);
+          
 
 
 
-            this.workdir = n.workdir || '';
-
-            var workdir = this.workdir;
+          
             var query = msg.query;
             var remotePath = '';
 
             let operation = msg.operation;
             let useFulltext = msg.useFulltext;
-            let fulltextEngineURL = msg.fulltextEngineURL
-            let sharePath = this.nodeConfig.options.share;
-            let username = this.nodeConfig.options.username;
-            let password = this.nodeConfig.options.password;
-            let domain = this.nodeConfig.options.domain;
-            let repositoryType = this.nodeConfig.options.repositoryType;
-            let ftpProtocol = this.nodeConfig.options.ftpProtocol;
-            let port = this.nodeConfig.options.port;
-            let addFulltextUrlPrefix = this.nodeConfig.options.addFulltextUrlPrefix;
+            let fulltextEngineURL = msg.fulltextEngineURL;
+ 
+
+	
 
 
             console.log("Rules : " + n.rules);
@@ -163,7 +170,7 @@ module.exports = function(RED) {
                                 Parser.parseEntries(result.data, "FTP", function(err, entryArray) {
 
                                     entryArray.forEach(function(entry, i) {
-                                        
+                                            console.log(i);
                                             standardJSON.resultCount = i;
                                             let objType = entry.type
                                             switch (entry.type) {
@@ -218,14 +225,14 @@ module.exports = function(RED) {
                                 };
 
                                 standardJSON.items.forEach(function(element, index) {
-                                  
+                                    console.log("Index" + index)
                                     if (element['filename'].search(query) >= 0) {
                                         filteredJSON.items.push(element);
-                                      
+                                        console.log('found', element)
 
                                     }
                                 })
-                             
+                                //   console.log(filteredJSON);
 
                                 msg.payload = filteredJSON;
                                 node.send(msg);
@@ -242,7 +249,7 @@ module.exports = function(RED) {
                         if (msg.operation === "list") {
 
 
-                      /*      console.log(
+                            console.log(
                                 "repositoryType: " + repIx + "\r\n" +
                                 "Share :		" + sharePath + "\r\n" +
                                 "Remote Path :	" + remotePath + "\r\n" +
@@ -252,7 +259,7 @@ module.exports = function(RED) {
                                 "Username : " + username + "\r\n"
 
 
-                            );*/
+                            );
 
 
 
@@ -280,7 +287,7 @@ module.exports = function(RED) {
 
                             cmdExec.on('close', function(code) {
 
-                              
+                                console.log(data);
 
 
                                 var standardJSON = {
@@ -353,7 +360,7 @@ module.exports = function(RED) {
 
                             });
                         } else if (msg.operation === 'find') {
-                       /*     console.log(
+                            console.log(
 
                                 "Share :		" + sharePath + "\r\n" +
                                 "Remote Path :	" + remotePath + "\r\n" +
@@ -364,7 +371,7 @@ module.exports = function(RED) {
                                 "FulltextSearch URL : " + fulltextEngineURL + "\r\n" +
                                 "UseFulltextSearch  :" + useFulltext
 
-                            );*/
+                            );
                             //WHERE /r  \\orion\users\mdalkaya\Testfolder *Car* /t
 
                             var parentPath = ""
