@@ -6,7 +6,7 @@ module.exports = function(RED) {
         decode
     } = require('./id.js');
     const spawn = require('child_process').spawn;
-    const FTPS = require('./lftpwrapper.js');
+    const FTPS = require('node-ftps');
     const path = require('path');
     const iconv = require('iconv-lite');
     const Parser = require("parse-listing");
