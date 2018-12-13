@@ -6,7 +6,7 @@ module.exports = function(RED) {
         decode
     } = require('./id.js');
     const spawn = require('child_process').spawn;
-    const FTPS = require('node-ftps');
+    const FTPS = require('ftps');
     const path = require('path');
     const iconv = require('iconv-lite');
     const Parser = require("parse-listing");
@@ -46,25 +46,26 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, n);
         var node = this;
 		
-		this.workdir = n.workdir || '';
-		var workdir = this.workdir;
-		this.filebrowser = n.rules[repIx].t; 
-		this.nodeConfig = RED.nodes.getNode(this.filebrowser);
-		let sharePath = this.nodeConfig.options.share;
-		let username = this.nodeConfig.options.username;
-		let password = this.nodeConfig.options.password;
-		let domain = this.nodeConfig.options.domain;
-		let repositoryType = this.nodeConfig.options.repositoryType;
-		let ftpProtocol = this.nodeConfig.options.ftpProtocol;
-		let port = this.nodeConfig.options.port;
-		let addFulltextUrlPrefix = this.nodeConfig.options.addFulltextUrlPrefix;
+
 
 
         node.on('input', function(msg) {
 		
 
-            let repIx = Number(msg.repIx) - 1;
-          
+        let repIx = Number(msg.repIx) - 1;
+        this.workdir = n.workdir || '';
+        var workdir = this.workdir;
+        this.filebrowser = n.rules[repIx].t; 
+        this.nodeConfig = RED.nodes.getNode(this.filebrowser);
+        let sharePath = this.nodeConfig.options.share;
+        let username = this.nodeConfig.options.username;
+        let password = this.nodeConfig.options.password;
+        let domain = this.nodeConfig.options.domain;
+        let repositoryType = this.nodeConfig.options.repositoryType;
+        let ftpProtocol = this.nodeConfig.options.ftpProtocol;
+        let port = this.nodeConfig.options.port;
+        let addFulltextUrlPrefix = this.nodeConfig.options.addFulltextUrlPrefix;
+        
 
 
 
