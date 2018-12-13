@@ -39,11 +39,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SCISYS-MS/node-contrib-filebrowser.git"
+    "url": "git+https://github.com/SCISYS-MS/node-red-contrib-filebrowser.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.21",
+  "version": "0.0.22",
   "devDependencies": {}
 }
