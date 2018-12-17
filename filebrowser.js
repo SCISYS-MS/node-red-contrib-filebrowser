@@ -14,7 +14,7 @@ module.exports = function(RED) {
     const fetch = require('node-fetch');
     const JefNode = require('json-easy-filter').JefNode;
     const bufferConcat = require('buffer-concat');
-
+    const { createClient } = require("webdav");
 
 
 
@@ -50,7 +50,7 @@ module.exports = function(RED) {
 
 
         node.on('input', function(msg) {
-		
+
 
         let repIx = Number(msg.repIx) - 1;
         this.workdir = n.workdir || '';
@@ -106,6 +106,197 @@ module.exports = function(RED) {
                     }
                 };
                 switch (repositoryType) {
+                 case 'WEBDAV':
+                
+                if (msg.operation === "list") {
+
+                    var webDavBaseURL = sharePath;  
+                    var webDavClient = createClient(webDavBaseURL, 
+                        {   
+                        username: "Administrator",    
+                        password: "Annova124" 
+                        }
+                     );
+                    
+                     console.log("selected folder: " +remotePath);
+                    webDavClient.getDirectoryContents(remotePath).then(responseData => {
+
+                        console.log(responseData);   
+
+                        var len = responseData.length;
+                    //  console.log("Array len:"+len);
+                        var	i;
+                        var z = 0;
+                        var	newData = { resultCount: responseData.length, items: [] };
+                        // get rid of the current directory - otherwise listed in search ...
+                        if (query == ""){
+                            z = 1;
+                        }
+                        
+
+                        var standardJSON = {
+                            parent: encode(parentPath),
+                            currentDir: currentDir,
+                            items: []
+                        };
+                        //Loop through the source JSON and format it into the standard format
+
+                        for (i = z; i < len; i += 1) {
+
+                            let objType;
+                            switch (responseData[i].type) {
+                                case "file":
+                                    objType = "file"
+                                    break;
+                                case "directory":
+                                    objType = "folder"
+                                    break;
+                                
+                            }
+
+
+
+
+
+                       
+                        var id = '';
+                        if (remotePath === '') {
+                            id = encode(responseData[i].basename);
+                        } else {
+                            id = encode(remotePath + "\\" + responseData[i].basename);
+                        }
+
+                        try{
+                            let absolutePath = responseData[i].filename;
+                            absolutePath = absolutePath.replace("../","");
+                            //console.log(absolutePath);
+
+                            standardJSON.items.push({
+
+                                id: id,
+                                name: responseData[i].basename,
+                                type:  objType,
+                                size: responseData[i].size,
+                                filename: responseData[i].basename,
+                                lastmod: responseData[i].lastmod,
+                                url: webDavBaseURL +  responseData[i].filename,
+                                mime: responseData[i].mime
+
+
+                            });
+                        }
+                            catch(e)
+                            {
+                            console.log("Error occoured fetching a value from JSON:" + e)
+                            }	
+                        
+
+                        }
+                        msg.payload = standardJSON;
+                        node.send(msg);
+                        
+                        
+
+
+
+
+                    })                  
+                    .catch(error => console.warn(error));
+                    }
+                    else if (msg.operation === 'find') {
+
+                    var webDavBaseURL = sharePath;  
+                    var webDavClient = createClient(webDavBaseURL, 
+                        {   
+                        username: username,    
+                        password: password 
+                        }
+                     );
+                    
+                    console.log("selected folder: " +remotePath);
+                    webDavClient.getDirectoryContentsRecursive(remotePath).then(responseData => {
+               //         console.log(responseData);
+                    var results = [];
+	                var searchField = "basename";
+                    var searchVal = query;
+                    
+                    var	i;
+                    var z = 0;
+                    var	newData = { resultCount: responseData.length, items: [] };
+               
+                    var standardJSON = {
+                        parent: encode(parentPath),
+                        currentDir: currentDir,
+                        items: []
+                    };
+                    
+
+		            for (var i=0 ; i < responseData.length ; i++){
+		
+			            var regex = new RegExp(query);
+			            var matchesRegex = regex.test(responseData[i][searchField]);
+			            if (matchesRegex) {
+                            console.log("Found")
+                  //          results.push(responseData[i]);
+                        let objType;
+                        switch (responseData[i].type) {
+                            case "file":
+                                objType = "file"
+                                break;
+                            case "directory":
+                                objType = "folder"
+                                break;
+                            
+                        }
+             
+                        var id =  encode(responseData[i].filename);
+                        
+
+                        try{
+                            let absolutePath = responseData[i].filename;
+                            absolutePath = absolutePath.replace("../","");
+                            //console.log(absolutePath);
+
+                            standardJSON.items.push({
+
+                                id: id,
+                                name: responseData[i].basename,
+                                type:  objType,
+                                size: responseData[i].size,
+                                filename: responseData[i].basename,
+                                lastmod: responseData[i].lastmod,
+                                url: webDavBaseURL +  responseData[i].filename,
+                                mime: responseData[i].mime
+
+
+                                    });
+                                }
+                            catch(e)
+                            {
+                            console.log("Error occoured fetching a value from JSON:" + e)
+                            }	
+                        
+
+              
+         
+              
+
+			            }
+
+                    }
+                    msg.payload = standardJSON;
+                    node.send(msg);
+                    
+
+                    console.log(results.length);
+                    
+
+                        
+                    });
+
+
+                    }
+                    break;
                     case 'FTP':
 
                         if (true) { //(msg.operation === "list") {

@@ -202,6 +202,7 @@
     <select type="text" id="node-config-input-repositoryType"  >
       <option value="SMB">SMB</option>
       <option value="FTP">FTP</option>
+      <option value="WEBDAV">WEBDAV</option>   
     </select>
   </div>
   
@@ -311,18 +312,28 @@
   
         $("#node-config-input-repositoryType").change(function() {
             var protocol = $("#node-config-input-repositoryType").val();
-            if (protocol === "SMB") {
+            switch(protocol) {
+
+            case "SMB": 
                 $(".input-smb_props-row").show();
                 $(".input-ftp_props-row").hide();
 				$(".input-ftpProtocol-row").hide();
-				$("#node-config-input-port").val("445");
-            } else {
+                $("#node-config-input-port").val("445");
+                break;
+            case "FTP":               
                 $(".input-smb_props-row").hide();
                 $(".input-ftp_props-row").show();
 				$(".input-ftpProtocol-row").show();
-				$("#node-config-input-port").val("21");
+                $("#node-config-input-port").val("21");
+                break;
+            case "WEBDAV":
+                $(".input-smb_props-row").show();
+                $(".input-ftp_props-row").hide();
+                $(".input-ftpProtocol-row").hide();
+                $("#node-config-input-port").val("445");
+                break;
             }
-          
+         
         });
 		
 		 $("#node-config-input-ftpProtocol").change(function() {
@@ -405,12 +416,19 @@
         oneditprepare: function() {
 		
             var protocol = $("#node-input-repositoryType").val();
-            if (protocol === "SMB") {
+            switch (protocol){
+            case "SMB": 
                 $(".input-smb_props-row").show();
                 $(".input-ftp_props-row").hide();
-            } else {
+                break;
+            case "FTP":
                 $(".input-smb_props-row").hide();
                 $(".input-ftp_props-row").show();
+                break;
+            case "WEBDAV":
+                $(".input-smb_props-row").show();
+                $(".input-ftp_props-row").hide();
+                break;
             }
         },
 	oneditsave: function() {

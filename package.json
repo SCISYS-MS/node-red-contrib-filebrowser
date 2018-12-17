@@ -1,25 +1,57 @@
 {
-  "author": "mdalkaya@annova.tv",
+  "_from": "node-red-contrib-filebrowser@0.0.23",
+  "_id": "node-red-contrib-filebrowser@0.0.23",
+  "_inBundle": false,
+  "_integrity": "sha512-I0ofOyLOw4i11S9okZwqL15Y8o/Jb70ByXDrXFGbGurQ8wfaK0pNSW+OXgMPJAjZc/PPZw1xwVe9YDhi/H83kQ==",
+  "_location": "/node-red-contrib-filebrowser",
+  "_phantomChildren": {
+    "duplex-child-process": "0.0.5",
+    "lodash": "4.17.11"
+  },
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "node-red-contrib-filebrowser@0.0.23",
+    "name": "node-red-contrib-filebrowser",
+    "escapedName": "node-red-contrib-filebrowser",
+    "rawSpec": "0.0.23",
+    "saveSpec": null,
+    "fetchSpec": "0.0.23"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/node-red-contrib-filebrowser/-/node-red-contrib-filebrowser-0.0.23.tgz",
+  "_shasum": "5576e7ad961db7777d317f41c91a1be628eb4696",
+  "_spec": "node-red-contrib-filebrowser@0.0.23",
+  "_where": "C:\\node-red\\common\\data",
+  "author": {
+    "name": "mdalkaya@annova.tv"
+  },
   "bugs": {
     "url": "https://github.com/SCISYS-MS/node-contrib-filebrowser/issues"
   },
+  "bundleDependencies": false,
   "dependencies": {
     "base64url": "3.0.0",
-    "buffer-concat" : "1.0.0",
+    "buffer-concat": "1.0.0",
     "child_process": "1.0.2",
-    "ftps": "1.1.1",
+    "deepmerge": "3.0.0",
+    "ftps": "git+https://github.com/SCISYS-MS/node-ftps.git",
     "iconv-lite": "0.4.24",
     "int64-buffer": "^0.99.1007",
     "json-easy-filter": "0.3.1",
     "mime-types": "2.1.20",
     "node-fetch": "2.3.0",
-    "node-ftps": "git+https://github.com/SCISYS-MS/node-ftps.git",
     "parse-listing": "git+https://github.com/SCISYS-MS/parse-listing.git",
-    "path": "0.12.7"
+    "path": "0.12.7",
+    "webdav": "git+https://github.com/SCISYS-MS/webdav-client.git"
   },
   "deprecated": false,
   "description": "node-red module to access network shares",
-  "homepage": "https://github.com/SCISYS-MS/node-red-contrib-filebrowser#readme", 
+  "devDependencies": {},
+  "homepage": "https://github.com/SCISYS-MS/node-red-contrib-filebrowser#readme",
   "keywords": [
     "smb",
     "cifs",
@@ -44,6 +76,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.23",
-  "devDependencies": {}
+  "version": "0.0.24"
 }
