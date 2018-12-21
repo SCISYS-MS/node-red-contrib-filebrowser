@@ -1,11 +1,14 @@
 module.exports = function(RED) {
     'use strict';
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
     const {
         encode,
         decode
     } = require('./id.js');
     const spawn = require('child_process').spawn;
+	const https = require('https');
+	https.globalAgent.options.ecdhCurve = 'auto';
     const FTPS = require('ftps');
     const path = require('path');
     const iconv = require('iconv-lite');
@@ -16,6 +19,7 @@ module.exports = function(RED) {
     const bufferConcat = require('buffer-concat');
     const { createClient } = require("webdav");
 
+	
 
 
     function fBConfigNode(n) {
@@ -33,8 +37,8 @@ module.exports = function(RED) {
             ftpProtocol: n.ftpProtocol,
             requireSSHKey: n.requireSSHKey,
             sshKeyPath: n.sshKeyPath,
-            addFulltextUrlPrefix: n.addFulltextUrlPrefix
-
+            addFulltextUrlPrefix: n.addFulltextUrlPrefix,
+			addFulltextUrlPrefixtoNav: n.addFulltextUrlPrefixtoNav
         }
     };
     RED.nodes.registerType('filebrowser', fBConfigNode);
@@ -57,7 +61,7 @@ module.exports = function(RED) {
         var workdir = this.workdir;
         this.filebrowser = n.rules[repIx].t; 
         this.nodeConfig = RED.nodes.getNode(this.filebrowser);
-        let sharePath = this.nodeConfig.options.share;
+        let sharePath = this.nodeConfig.options.share.replace(/\/$/, ""); //	// Strip the ending slash
         let username = this.nodeConfig.options.username;
         let password = this.nodeConfig.options.password;
         let domain = this.nodeConfig.options.domain;
@@ -65,7 +69,7 @@ module.exports = function(RED) {
         let ftpProtocol = this.nodeConfig.options.ftpProtocol;
         let port = this.nodeConfig.options.port;
         let addFulltextUrlPrefix = this.nodeConfig.options.addFulltextUrlPrefix;
-        
+        let addFulltextUrlPrefixtoNav = this.nodeConfig.options.addFulltextUrlPrefixtoNav;
 
 
 
@@ -108,18 +112,48 @@ module.exports = function(RED) {
                 switch (repositoryType) {
                  case 'WEBDAV':
                 
-                if (msg.operation === "list") {
+                if (msg.operation === "xx") {
+					
+					var agent = require("https").Agent({
+					keepAlive: true,
+					rejectUnauthorized: false
+				
+				});
+
+					var wfs = require("webdav-fs")(
+						"https://omloaweb300sc.ad.ndr-net.de/TestWebDav/",
+						"",
+						"",
+						agent
+					);
+
+					wfs.readdir("/", function(err, contents) {
+						if (!err) {
+							console.log("Dir contents:", contents);
+						} else {
+							console.log("Error:", err.message);
+						}
+					});
+				}
+				else if (msg.operation === "list"){
+					
 
                     var webDavBaseURL = sharePath;  
+					const addOption = {
+					'agent': new https.Agent({ rejectUnauthorized: false })
+						}
+	
                     var webDavClient = createClient(webDavBaseURL, 
-                        {   
-                        username: "Administrator",    
-                        password: "Annova124" 
-                        }
+                         
+                        username,    
+                        password,
+                        
+						addOption
+						
                      );
                     
                      console.log("selected folder: " +remotePath);
-                    webDavClient.getDirectoryContents(remotePath).then(responseData => {
+                    webDavClient.getDirectoryContents(remotePath, addOption).then(responseData => {
 
                         console.log(responseData);   
 
@@ -180,6 +214,7 @@ module.exports = function(RED) {
                                 filename: responseData[i].basename,
                                 lastmod: responseData[i].lastmod,
                                 url: webDavBaseURL +  responseData[i].filename,
+								nav_url : webDavBaseURL +  responseData[i].filename,
                                 mime: responseData[i].mime
 
 
@@ -192,7 +227,7 @@ module.exports = function(RED) {
                         
 
                         }
-                        msg.payload = standardJSON;
+                        msg.data = standardJSON;
                         node.send(msg);
                         
                         
@@ -266,6 +301,7 @@ module.exports = function(RED) {
                                 filename: responseData[i].basename,
                                 lastmod: responseData[i].lastmod,
                                 url: webDavBaseURL +  responseData[i].filename,
+								nav_url :  webDavBaseURL +  responseData[i].filename,
                                 mime: responseData[i].mime
 
 
@@ -284,7 +320,7 @@ module.exports = function(RED) {
 			            }
 
                     }
-                    msg.payload = standardJSON;
+                    msg.data = standardJSON;
                     node.send(msg);
                     
 
@@ -399,6 +435,7 @@ module.exports = function(RED) {
                                                 filename: entry.name,
                                                 lastmod: entry.time,
                                                 url: openurl,
+												nav_url : openurl,
                                                 mime: mime.lookup(entry.name)
 
                                             })
@@ -426,7 +463,7 @@ module.exports = function(RED) {
                                 })
                                 //   console.log(filteredJSON);
 
-                                msg.payload = filteredJSON;
+                                msg.data = filteredJSON;
                                 node.send(msg);
 
 
@@ -508,6 +545,7 @@ module.exports = function(RED) {
                                             if (remotePath === '') {
                                                 id = encode(entry.name);
                                             } else {
+												
                                                 id = encode(remotePath + "\\" + entry.name);
                                             }
 
@@ -518,6 +556,14 @@ module.exports = function(RED) {
                                                 openurl = sharePath + "\\" + remotePath + "\\" + entry.name
                                             }
 
+											let nav_url;
+                                            if (addFulltextUrlPrefixtoNav) {
+                                                nav_url = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
+                                            } else {
+                                                nav_url = sharePath + "\\" + remotePath + "\\" + entry.name
+                                            }
+								//			openurl = openurl.replace(/\\/g,"/");
+								//			nav_url = nav_url.replace(/\\/g,"/");
 
 
                                             //       let parentDir = userPath.substr(0, userPath.lastIndexOf("\\")); // + "\\" + entry.name;
@@ -529,6 +575,7 @@ module.exports = function(RED) {
                                                 filename: entry.name,
                                                 lastmod: entry.time,
                                                 url: openurl,
+												nav_url : nav_url,
                                                 mime: mime.lookup(entry.name)
                                                 //			raw: entry
 
@@ -545,7 +592,7 @@ module.exports = function(RED) {
 
 
 
-                                msg.payload = standardJSON;
+                                msg.data = standardJSON;
                                 node.send(msg);
 
                                 //	});
@@ -618,7 +665,15 @@ module.exports = function(RED) {
                                                 } else {
                                                     openurl = responseData.results[i].path + "\\" + responseData.results[i].name
                                                 }
-
+												
+												let nav_url;
+												if (addFulltextUrlPrefixtoNav) {
+													nav_url = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
+												} else {
+													nav_url = sharePath + "\\" + remotePath + "\\" + entry.name
+												}
+								//			openurl = openurl.replace(/\\/g,"/");
+								//			nav_url = nav_url.replace(/\\/g,"/");
 
 
                                                 standardJSON.items.push({
@@ -629,6 +684,7 @@ module.exports = function(RED) {
                                                     filename: responseData.results[i].name,
                                                     lastmod: "", //lastmodDT, //since return is tick,
                                                     url: openurl,
+													nav_url : nav_url,
                                                     mime: mime.lookup(responseData.results[i].name)
                                                     //			raw: entry
 
@@ -643,7 +699,7 @@ module.exports = function(RED) {
 
 
                                         }
-                                        msg.payload = standardJSON;
+                                        msg.data = standardJSON;
                                         node.send(msg);
                                     })
                                     .catch(error => console.warn(error));
@@ -702,6 +758,16 @@ module.exports = function(RED) {
                                             } else {
                                                 openurl = sharePath + "\\" + remotePath + "\\" + entry.name
                                             }
+											
+											let nav_url;
+												if (addFulltextUrlPrefixtoNav) {
+													nav_url = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
+												} else {
+													nav_url = sharePath + "\\" + remotePath + "\\" + entry.name
+												}
+											
+								//			openurl = openurl.replace(/\\/g,"/");
+								//			nav_url = nav_url.replace(/\\/g,"/");
 
 
 
@@ -714,6 +780,7 @@ module.exports = function(RED) {
                                                 filename: entry.name,
                                                 //   lastmod: entry.time,
                                                 url: openurl,
+												nav_url : nav_url,
                                                 mime: mime.lookup(entry.name)
                                                 //			raw: entry
 
@@ -725,7 +792,7 @@ module.exports = function(RED) {
                                         });
                                     });
 
-                                    msg.payload = standardJSON;
+                                    msg.data = standardJSON;
                                     node.send(msg);
                                 })
 
