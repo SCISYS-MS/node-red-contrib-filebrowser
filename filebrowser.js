@@ -20,6 +20,18 @@ module.exports = function(RED) {
     const { createClient } = require("webdav");
 
 	
+	
+	
+	function sortResults(responseData, prop, asc) {	
+			return responseData.items.sort(function(a, b) {
+				if (asc) {
+					return (a[prop] > b[prop]) ? 1 : ((a[prop] < b[prop]) ? -1 : 0);
+				} else {
+					return (b[prop] > a[prop]) ? 1 : ((b[prop] < a[prop]) ? -1 : 0);
+				}
+			});
+	
+	}
 
 
     function fBConfigNode(n) {
@@ -37,8 +49,7 @@ module.exports = function(RED) {
             ftpProtocol: n.ftpProtocol,
             requireSSHKey: n.requireSSHKey,
             sshKeyPath: n.sshKeyPath,
-            addFulltextUrlPrefix: n.addFulltextUrlPrefix,
-			addFulltextUrlPrefixtoNav: n.addFulltextUrlPrefixtoNav
+          
         }
     };
     RED.nodes.registerType('filebrowser', fBConfigNode);
@@ -55,7 +66,7 @@ module.exports = function(RED) {
 
         node.on('input', function(msg) {
 
-
+	
         let repIx = Number(msg.repIx) - 1;
         this.workdir = n.workdir || '';
         var workdir = this.workdir;
@@ -68,18 +79,18 @@ module.exports = function(RED) {
         let repositoryType = this.nodeConfig.options.repositoryType;
         let ftpProtocol = this.nodeConfig.options.ftpProtocol;
         let port = this.nodeConfig.options.port;
-        let addFulltextUrlPrefix = this.nodeConfig.options.addFulltextUrlPrefix;
-        let addFulltextUrlPrefixtoNav = this.nodeConfig.options.addFulltextUrlPrefixtoNav;
+     
 
 
 
           
             var query = msg.query;
-            var remotePath = '';
+            var remotePath_decoded = '';
+			var remotePath_encoded = '';
 
             let operation = msg.operation;
             let useFulltext = msg.useFulltext;
-            let fulltextEngineURL = msg.fulltextEngineURL;
+            let everythingURL = msg.everythingURL.replace(/\/$/, "");;
  
 
 	
@@ -88,7 +99,9 @@ module.exports = function(RED) {
             console.log("Rules : " + n.rules);
 
             if (msg.remotePath && msg.remotePath !== 'XA') {
-                remotePath = decode(msg.remotePath);
+			
+				remotePath_encoded = msg.remotePath;
+                remotePath_decoded = decode(msg.remotePath);
             };
 
 
@@ -97,7 +110,8 @@ module.exports = function(RED) {
 
                 var parentPath = ""
                 var currentDir = ""
-                var folders = remotePath.split('\\');
+				console.log("Remote PAth = " +  remotePath_decoded);
+                var folders = remotePath_decoded.split('\\');
                 currentDir = folders[folders.length - 1];
 
                 for (var i = 0; i < folders.length - 1; i++) {
@@ -110,7 +124,9 @@ module.exports = function(RED) {
                     }
                 };
                 switch (repositoryType) {
-                 case 'WEBDAV':
+                
+
+				case 'WEBDAV':
                 
                 if (msg.operation === "xx") {
 					
@@ -152,8 +168,8 @@ module.exports = function(RED) {
 						
                      );
                     
-                     console.log("selected folder: " +remotePath);
-                    webDavClient.getDirectoryContents(remotePath, addOption).then(responseData => {
+                     console.log("selected folder: " +remotePath_decoded);
+                    webDavClient.getDirectoryContents(remotePath_decoded, addOption).then(responseData => {
 
                         console.log(responseData);   
 
@@ -194,17 +210,19 @@ module.exports = function(RED) {
 
                        
                         var id = '';
-                        if (remotePath === '') {
+                        if (remotePath_decoded == '' || remotePath_decoded == null) {
                             id = encode(responseData[i].basename);
                         } else {
-                            id = encode(remotePath + "\\" + responseData[i].basename);
+
+                            id = encode(remotePath_decoded + "\\" + responseData[i].basename);
                         }
 
                         try{
                             let absolutePath = responseData[i].filename;
                             absolutePath = absolutePath.replace("../","");
                             //console.log(absolutePath);
-
+							var encodedURL = encodeURI(webDavBaseURL +  responseData[i].filename);
+							var encodedNavURL = encodeURI(webDavBaseURL +  responseData[i].filename);
                             standardJSON.items.push({
 
                                 id: id,
@@ -213,8 +231,8 @@ module.exports = function(RED) {
                                 size: responseData[i].size,
                                 filename: responseData[i].basename,
                                 lastmod: responseData[i].lastmod,
-                                url: webDavBaseURL +  responseData[i].filename,
-								nav_url : webDavBaseURL +  responseData[i].filename,
+                                url: encodedURL,
+								nav_url : encodedNavURL,
                                 mime: responseData[i].mime
 
 
@@ -238,7 +256,7 @@ module.exports = function(RED) {
                     })                  
                     .catch(error => console.warn(error));
                     }
-                    else if (msg.operation === 'find') {
+                else if (msg.operation === 'find') {
 
                     var webDavBaseURL = sharePath;  
                     var webDavClient = createClient(webDavBaseURL, 
@@ -248,8 +266,10 @@ module.exports = function(RED) {
                         }
                      );
                     
-                    console.log("selected folder: " +remotePath);
-                    webDavClient.getDirectoryContentsRecursive(remotePath).then(responseData => {
+                    console.log("selected folder: " +remotePath_decoded);
+                    webDavClient.getDirectoryContentsRecursive(remotePath_decoded).then(responseData => {
+					//webDavClient.getDirectoryContents(remotePath_decoded).then(responseData => {
+						
                //         console.log(responseData);
                     var results = [];
 	                var searchField = "basename";
@@ -291,7 +311,8 @@ module.exports = function(RED) {
                             let absolutePath = responseData[i].filename;
                             absolutePath = absolutePath.replace("../","");
                             //console.log(absolutePath);
-
+							var encodedURL = encodeURI(webDavBaseURL +  responseData[i].filename);
+							var encodedNavURL = encodeURI(webDavBaseURL +  responseData[i].filename);
                             standardJSON.items.push({
 
                                 id: id,
@@ -300,8 +321,8 @@ module.exports = function(RED) {
                                 size: responseData[i].size,
                                 filename: responseData[i].basename,
                                 lastmod: responseData[i].lastmod,
-                                url: webDavBaseURL +  responseData[i].filename,
-								nav_url :  webDavBaseURL +  responseData[i].filename,
+                                url: encodedURL,
+								nav_url :  encodedNavURL,
                                 mime: responseData[i].mime
 
 
@@ -332,10 +353,11 @@ module.exports = function(RED) {
 
 
                     }
-                    break;
-                    case 'FTP':
+                break;
+				
+                case 'FTP':
 
-                        if (true) { //(msg.operation === "list") {
+                if (true) { //(msg.operation === "list") {
 
                             var ftps = new FTPS({
                                 host: sharePath,
@@ -365,7 +387,7 @@ module.exports = function(RED) {
 
                             let lftp_command;
 
-                            ftps.cd("'" + remotePath + "'");
+                            ftps.cd("'" + remotePath_decoded + "'");
 
 
                             console.log("Query ::" + query)
@@ -416,17 +438,21 @@ module.exports = function(RED) {
                                             //		let parentDir = userPath.substr(0, userPath.lastIndexOf("\\")); // + "\\" + entry.name;
 
                                             var id = '';
-                                            if (remotePath === '') {
+                                            if (remotePath_decoded == '' ||remotePath_decoded == null) {
                                                 id = encode(entry.name);
                                             } else {
-                                                id = encode(remotePath + "\\" + entry.name);
+                                                id = encode(remotePath_decoded + "\\" + entry.name);
                                             }
 
                                             let openurl;
                                             if (repositoryType == "FTP") {
-                                                openurl = ftpProtocol + "://" + sharePath + ":" + port + "\/" + remotePath + "\\" + entry.name
+                                                openurl = ftpProtocol + "://" + sharePath + ":" + port + "\/" + remotePath_decoded + "\\" + entry.name
                                             }
-
+											
+											
+											var encodedURL = openurl.replace(/\\/g,"/"); // replace all backslashes with forward slashes.
+											//var encodedURL = encodeURI(openurl);
+										//	var encodedNavURL = encodeURI(openurl);
                                             standardJSON.items.push({
                                                 id: id,
                                                 name: entry.name,
@@ -434,8 +460,8 @@ module.exports = function(RED) {
                                                 size: entry.size,
                                                 filename: entry.name,
                                                 lastmod: entry.time,
-                                                url: openurl,
-												nav_url : openurl,
+                                                url: encodedURL,
+												nav_url : encodedURL,
                                                 mime: mime.lookup(entry.name)
 
                                             })
@@ -464,6 +490,7 @@ module.exports = function(RED) {
                                 //   console.log(filteredJSON);
 
                                 msg.data = filteredJSON;
+							
                                 node.send(msg);
 
 
@@ -472,142 +499,21 @@ module.exports = function(RED) {
                             });
 
                         }
+				break;
+                    
+				case 'SMB':
+                   //     if (msg.operation === "list") {
+					if (true) {
 
-                        break;
-                    case 'SMB':
-                        if (msg.operation === "list") {
-
-
-                            console.log(
-                                "repositoryType: " + repIx + "\r\n" +
-                                "Share :		" + sharePath + "\r\n" +
-                                "Remote Path :	" + remotePath + "\r\n" +
-                                "Operation :	" + operation + "\r\n" +
-                                "User : " + username + "\r\n" + "\r\n" +
-                                "Domain : " + domain + "\r\n" +
-                                "Username : " + username + "\r\n"
-
-
-                            );
-
-
-
-                            let spawnoptions = [
-                                "/C",
-                                "dir.exe",
-                                sharePath + "\\" + remotePath
-
-                            ];
-
-                            var cmdExec = spawn('cmd.exe', spawnoptions);
-
-
-
-                            var data = ''
-                            var error = ''
-
-                            cmdExec.stdout.on('data', function(res) {
-                                data += iconv.decode(Buffer.from(res), '437')
-                            })
-                            cmdExec.stderr.on('data', function(res) {
-
-                                error += res
-                            })
-
-                            cmdExec.on('close', function(code) {
-
-                                console.log(data);
-
-
-                                var standardJSON = {
-                                    parent: encode(parentPath),
-                                    currentDir: currentDir,
-                                    items: []
-                                };
-                                Parser.parseEntries(data.trim(), "DIR", function(err, entryArray) {
-
-                                    entryArray.forEach(function(entry, i) {
-
-                                            let objType = entry.type
-                                            switch (entry.type) {
-                                                case 0:
-                                                    objType = "file"
-                                                    break;
-                                                case 1:
-                                                    objType = "folder"
-                                                    break;
-                                                case 2:
-                                                    objType = "file"
-                                                    break;
-                                            }
-
-                                            var id = '';
-                                            if (remotePath === '') {
-                                                id = encode(entry.name);
-                                            } else {
-												
-                                                id = encode(remotePath + "\\" + entry.name);
-                                            }
-
-                                            let openurl;
-                                            if (addFulltextUrlPrefix) {
-                                                openurl = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
-                                            } else {
-                                                openurl = sharePath + "\\" + remotePath + "\\" + entry.name
-                                            }
-
-											let nav_url;
-                                            if (addFulltextUrlPrefixtoNav) {
-                                                nav_url = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
-                                            } else {
-                                                nav_url = sharePath + "\\" + remotePath + "\\" + entry.name
-                                            }
-								//			openurl = openurl.replace(/\\/g,"/");
-								//			nav_url = nav_url.replace(/\\/g,"/");
-
-
-                                            //       let parentDir = userPath.substr(0, userPath.lastIndexOf("\\")); // + "\\" + entry.name;
-                                            standardJSON.items.push({
-                                                id: id,
-                                                name: entry.name,
-                                                type: objType,
-                                                size: entry.size,
-                                                filename: entry.name,
-                                                lastmod: entry.time,
-                                                url: openurl,
-												nav_url : nav_url,
-                                                mime: mime.lookup(entry.name)
-                                                //			raw: entry
-
-                                            });
-
-
-                                        }
-
-
-
-                                    );
-                                });
-
-
-
-
-                                msg.data = standardJSON;
-                                node.send(msg);
-
-                                //	});
-
-                            });
-                        } else if (msg.operation === 'find') {
-                            console.log(
+                              console.log(
 
                                 "Share :		" + sharePath + "\r\n" +
-                                "Remote Path :	" + remotePath + "\r\n" +
+                                "Remote Path :	" + remotePath_decoded + "\r\n" +
                                 "Operation :	" + operation + "\r\n" +
                                 "User : " + username + "\r\n" + "\r\n" +
                                 "Domain : " + domain + "\r\n" +
                                 "Username : " + username + "\r\n" +
-                                "FulltextSearch URL : " + fulltextEngineURL + "\r\n" +
+                                "FulltextSearch URL : " + everythingURL + "\r\n" +
                                 "UseFulltextSearch  :" + useFulltext
 
                             );
@@ -615,7 +521,7 @@ module.exports = function(RED) {
 
                             var parentPath = ""
                             var currentDir = ""
-                            var folders = remotePath.split('\\');
+                            var folders = remotePath_decoded.split('\\');
                             currentDir = folders[folders.length - 1];
 
                             for (var i = 0; i < folders.length - 1; i++) {
@@ -628,65 +534,94 @@ module.exports = function(RED) {
                                 }
                             };
 
-                            if (useFulltext === "true") {
-                                console.log("Using fulltext engine");
-                                var searchPath = sharePath.substring(1) + "\\" + remotePath // use path in Format \share\sub1\sub2\ for the everything search engine
-
-
-                                var fetchURL = fulltextEngineURL + "/?search=" + searchPath + "+" + query + "&path=1&offset=0&sort=size&ascending=0&json=1&path_column=1&size_column=1&date_modified_column=1";
+                         
+                         
+								// if sharePath = \\Server1\OMShare
+								let formatedSharePath = sharePath.substring(2); //remove first two backslahes -> Server1\OMShare
+								formatedSharePath = formatedSharePath.replace(/\\/g,"/"); // replace all backslashes with forward slashes. Finally our search engine URL becomes: Server1/OMShare
+								
+								let sortOrder = "0";
+								sortOrder = msg.payload.sortOrder=="asc" ? "1" : "0";
+								let sortType = "name";
+								sortType = msg.payload.orderBy;
+						
+						
+								var searchPath = "";
+								//searchPath = sharePath.substring(1) + "\\" + remotePath_decoded.substring(1).replace(/\//g, "\\"); // use path in Format \share\sub1\sub2\ for the everything search engine
+								searchPath = remotePath_decoded.substring(1).replace(/\//g, "\\"); // use path in Format \share\sub1\sub2\ for the everything search engine
+								var fetchURL
+								  if (msg.operation === "list") {
+										
+									if (remotePath_decoded.includes(formatedSharePath)) {
+										fetchURL = everythingURL + "/%5C%5C" + remotePath_decoded.slice(2) + "/?j=1" + "&sort=" + sortType + "&ascending=" + sortOrder
+									} else {
+										fetchURL = everythingURL + "/%5C%5C" + formatedSharePath + remotePath_decoded + "/?j=1" + "&sort=" + sortType + "&ascending=" + sortOrder
+									}
+									
+								}
+								else if (msg.operation === "find") {
+								console.log("Remote Path = " + remotePath_decoded)
+								fetchURL = everythingURL + "/?search=" + searchPath + "+" + query + "&offset=0&sort="+sortType+"&ascending="+sortOrder+"&json=1&path_column=1&size_column=1&date_modified_column=1";
+							
+								}
                                 console.log("FETCH URL = " + fetchURL);
 
                                 fetch(fetchURL)
                                     .then(response => response.json())
                                     .then(responseData => {
 
-
+									console.log(responseData);
 
                                         var len = responseData.results.length;
-
-
-
-
                                         var standardJSON = {
                                             items: []
                                         };
-                                        var i;
+                                
 
-
-                                        //Loop through the source JSON and format it into the standard format
-                                        for (i = 0; i < len; i += 1) {
-                                            try {
-
-                                                var id = '';
-                                                id = encode(responseData.results[i].path + "\\" + responseData.results[i].name);
-                                                let openurl;
-                                                if (addFulltextUrlPrefix) {
-                                                    openurl = fulltextEngineURL + "\/" + responseData.results[i].path + "\\" + responseData.results[i].name
-                                                } else {
-                                                    openurl = responseData.results[i].path + "\\" + responseData.results[i].name
-                                                }
+                                        for (var i = 0; i < len; i += 1) {
+                                           
+										   try {
+											
+											var id;
+											var http_link
+											if (responseData.results[i].hasOwnProperty("path")) { // Output is a search result
+											id = encode(responseData.results[i].path +  "\\" + responseData.results[i].name);
+											http_link = everythingURL + "/%5C%5C" + responseData.results[i].path.substring(2).replace(/\\/g,"/") + "/" + responseData.results[i].name
+											}
+											else {
+											id = encode(remotePath_decoded + "/" + responseData.results[i].name);
+											http_link = everythingURL + "/%5C%5C" + formatedSharePath + remotePath_decoded + "/" + responseData.results[i].name
+											}
+										
+											
+											var dateMod = new Date ( responseData.results[i].date_modified / 10000 - 11644473600000 ); // Windows File Time to DateTime
+											
+											var encodedURL;
 												
-												let nav_url;
-												if (addFulltextUrlPrefixtoNav) {
-													nav_url = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
-												} else {
-													nav_url = sharePath + "\\" + remotePath + "\\" + entry.name
-												}
-								//			openurl = openurl.replace(/\\/g,"/");
-								//			nav_url = nav_url.replace(/\\/g,"/");
-
-
+											//		openurl = everythingURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
+											//		encodedURL = encodeURI(openurl);
+											
+											//		openurl = sharePath + "\\" + remotePath + "\\" + entry.name
+												
+											
+											var uncPath;
+											uncPath = sharePath +  remotePath_decoded.replace(/\//g,"\\") + "\\" + responseData.results[i].name,	//replace all forward slahes with backslash 	
+											
+								//			var encodedNavURL = encodeURI(nav_url);
+				
                                                 standardJSON.items.push({
                                                     id: id,
                                                     name: responseData.results[i].name,
                                                     type: responseData.results[i].type,
-                                                    size: responseData.results[i].size,
+                                                    size: responseData.results[i].size || "",
                                                     filename: responseData.results[i].name,
-                                                    lastmod: "", //lastmodDT, //since return is tick,
-                                                    url: openurl,
-													nav_url : nav_url,
+                                                    lastmod: dateMod, //lastmodDT, //since return is tick,
+													url: http_link,
+													nav_url : http_link,
+													uncPath : uncPath, 
+													httpLink : http_link,	
                                                     mime: mime.lookup(responseData.results[i].name)
-                                                    //			raw: entry
+                                             
 
                                                 });
 
@@ -703,102 +638,8 @@ module.exports = function(RED) {
                                         node.send(msg);
                                     })
                                     .catch(error => console.warn(error));
-                            } else {
-                                //console.log("Execute Search : " + "WHERE /r " +  sharePath + "\\" + remotePath + " " +  "*" + query + "*" + " /t")				
-                                let spawnoptions = [
-                                    "/r",
-                                    sharePath + "\\" + remotePath,
-                                    "*" + query + "*",
-                                    "/t"
-                                ];
-
-                                var cmdExec = spawn('WHERE.exe', spawnoptions);
-
-
-
-                                var data = ''
-                                var error = ''
-
-                                cmdExec.stdout.on('data', function(res) {
-                                    data += iconv.decode(Buffer.from(res), '437')
-                                })
-                                cmdExec.stderr.on('data', function(res) {
-
-                                    error += res
-                                })
-
-
-
-                                cmdExec.on('close', function(code) {
-
-                                    console.log(data);
-
-
-                                    var standardJSON = {
-                                        parent: encode(parentPath),
-                                        currentDir: currentDir,
-                                        items: []
-                                    };
-
-                                    Parser.parseEntries(data, "WHERE", function(err, entryArray) {
-
-                                        entryArray.forEach(function(entry, i) {
-
-                                            var id = '';
-                                            if (remotePath === '') {
-                                                id = encode(entry.name);
-                                            } else {
-                                                id = encode(remotePath + "\\" + entry.name);
-                                            }
-
-
-                                            let openurl;
-                                            if (addFulltextUrlPrefix) {
-                                                openurl = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
-                                            } else {
-                                                openurl = sharePath + "\\" + remotePath + "\\" + entry.name
-                                            }
-											
-											let nav_url;
-												if (addFulltextUrlPrefixtoNav) {
-													nav_url = fulltextEngineURL + "\/" + sharePath + "\\" + remotePath + "\\" + entry.name
-												} else {
-													nav_url = sharePath + "\\" + remotePath + "\\" + entry.name
-												}
-											
-								//			openurl = openurl.replace(/\\/g,"/");
-								//			nav_url = nav_url.replace(/\\/g,"/");
-
-
-
-                                            //       let parentDir = userPath.substr(0, userPath.lastIndexOf("\\")); // + "\\" + entry.name;
-                                            standardJSON.items.push({
-                                                id: id,
-                                                name: entry.name,
-                                                type: entry.type,
-                                                size: entry.size,
-                                                filename: entry.name,
-                                                //   lastmod: entry.time,
-                                                url: openurl,
-												nav_url : nav_url,
-                                                mime: mime.lookup(entry.name)
-                                                //			raw: entry
-
-                                            });
-
-
-
-
-                                        });
-                                    });
-
-                                    msg.data = standardJSON;
-                                    node.send(msg);
-                                })
-
-                            }
-
-                        }
+                       
+                        } 
 
                         break;
                 };
@@ -808,5 +649,6 @@ module.exports = function(RED) {
 
         })
     }
+
     RED.nodes.registerType('filebrowser in', fileBrowserClient);
 };
