@@ -65,7 +65,7 @@ In order to configure the search engine for SMB/CIFS repositories (FTP/SFTP/FTPS
 
 
 - Add the SMB/CIFS Repository under Tools>>>Options>Folders >> Add
-![screenshot](https://user-images.githubusercontent.com/35899018/49738377-8b285800-fc8f-11e8-9445-408a5f8c40ab.png)
+
 
 - New Shares can be added by simply typing the full share name (e.g. \\\SHARE1). Please ensure that the Share-name matches with the configured repository name in the filebrowser node 
 - Set an approperiate port number 
