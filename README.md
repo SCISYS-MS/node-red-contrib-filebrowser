@@ -75,10 +75,6 @@ In order to configure the search engine for SMB/CIFS repositories (FTP/SFTP/FTPS
 
 - To test try to connect to the HTTP Endpoint:
 
-
-
-![screenshot](https://user-images.githubusercontent.com/35899018/49739155-7baa0e80-fc91-11e8-8b21-c94eab9b5163.png)
-
 ### FTP Shares 
 
 To create a new FTP repository set the Repsoitory Type to "FTP":
